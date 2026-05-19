@@ -59,7 +59,7 @@ Please include in your message:
 
 Access to the Euclid catalog and masks is subject to Euclid Collaboration data policy
 and will require approval from the data custodians. Access to the simulation files
-is subject to approval by Prof. Sinigaglia. Kevin will forward your request and keep
+is subject to approval by Euclid collaborators. Kevin will forward your request and keep
 you informed of the response.
 
 ---
