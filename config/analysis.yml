@@ -1,0 +1,377 @@
+# =============================================================================
+# LRDs 2PACF Analysis Configuration
+# =============================================================================
+# This file is the SINGLE SOURCE OF TRUTH for all analysis parameters.
+# Nothing should be hardcoded in scripts or notebooks — change settings here.
+#
+# Surveys : Three Euclid Deep Fields (EDF-S, EDF-Fornax, EDF-N)
+# Target  : Little Red Dot (LRD) galaxies
+# Method  : Landy-Szalay (1993) two-point angular correlation function
+# =============================================================================
+
+
+# -----------------------------------------------------------------------------
+# Paths (all relative to the project root)
+# -----------------------------------------------------------------------------
+paths:
+  raw_catalog:      data/raw/LRD_MarIRAC.fits
+  mask_healpix:     data/raw/masks/mask_healpix_nside1024.fits
+  simulations_dir:  data/raw/simulations/        # directory with .npy sim files
+  results_dir:      results/
+  figures_dir:      results/figures/
+  corr_dir:         results/correlation_functions/
+  cov_dir:          results/covariance_matrices/
+
+
+# -----------------------------------------------------------------------------
+# Field definitions — one entry per Euclid Deep Field
+#
+# Keys per field:
+#   name            — human-readable label
+#   ra_min/ra_max   — generous bounding box in degrees (sky cut applied first)
+#   dec_min/dec_max — bounding box in degrees
+#   l_min_deg       — smallest angular dimension of the field (degrees).
+#                     Used for the Landy & Szalay (1993) edge-effect criterion:
+#                       θ_max < L_min/3  (strict)
+#                       θ_max < L_min/2  (conservative)
+#                     Recommended max_sep is noted per field.
+#   mask_healsparse — path to the HealSparse mask for this field, or null if
+#                     no mask is available (uniform randoms used instead).
+# -----------------------------------------------------------------------------
+fields:
+
+  edf_s:
+    name:            "Euclid Deep Field South (EDF-S)"
+    ra_min:          55.0    # data extent: 56.02 – 66.42
+    ra_max:          67.5
+    dec_min:         -52.5   # data extent: -51.22 – -45.67
+    dec_max:         -44.5
+    l_min_deg:       6.5     # Dec range ≈ 6.5° → recommend max_sep ≤ 3.3°
+    mask_healsparse: data/raw/masks/mask_map_healsparse_EDFS_v1.fits
+
+  edf_fornax:
+    name:            "Euclid Deep Field Fornax (EDF-F)"
+    ra_min:          50.0    # data extent: 50.95 – 54.93
+    ra_max:          55.5
+    dec_min:         -31.0   # data extent: -30.02 – -26.19
+    dec_max:         -25.5
+    l_min_deg:       4.0     # Dec range ≈ 4°, RA projected ≈ 4° → recommend max_sep ≤ 1.3°
+    mask_healsparse: null    # no official mask yet — uniform randoms used
+
+  edf_n:
+    name:            "Euclid Deep Field North (EDF-N)"
+    ra_min:          261.0   # data extent: 264.10 – 275.04
+    ra_max:          277.0
+    dec_min:         63.0    # data extent: 64.15 – 68.46
+    dec_max:         70.0
+    l_min_deg:       5.5     # Dec range ≈ 5.5° → recommend max_sep ≤ 2.8°
+    mask_healsparse: null    # no official mask yet — uniform randoms used
+
+
+# -----------------------------------------------------------------------------
+# Catalog column names
+# -----------------------------------------------------------------------------
+columns:
+  ra:             RA
+  dec:            DEC
+  redshift:       z
+  irac_footprint: IRAC-footprint    # bool — inside IRAC imaging footprint
+  irac_detected:  IRAC-detected     # bool — detected in IRAC imaging
+
+
+# -----------------------------------------------------------------------------
+# Sample definitions
+#
+# Each sample is a named sub-selection of the full catalog defined by:
+#
+#   field        — which Euclid Deep Field(s) to use:
+#                    edf_s      → Euclid Deep Field South (bottom patch)
+#                    edf_fornax → Euclid Deep Field Fornax (mid patch)
+#                    edf_n      → Euclid Deep Field North (north patch)
+#                    all        → all three fields concatenated
+#
+#   irac_filter  — IRAC flag selection applied before the sky cut:
+#                    none         → keep all objects (no IRAC filter)
+#                    footprint    → IRAC-footprint == True
+#                    detected     → IRAC-detected  == True
+#                    no_footprint → IRAC-footprint == False
+#
+#   apply_mask   — whether to apply the field's HealSparse mask.
+#                  If true but the field has no mask_healsparse defined,
+#                  uniform (unmasked) randoms are used and a warning is printed.
+#                  For field: all, the mask is applied per-subfield where
+#                  available (currently only EDF-S has a mask).
+#
+# USER: add your own sample by following the same pattern.
+# Example:
+#   my_sample:
+#     description: "EDF-N all galaxies, no mask"
+#     field:       edf_n
+#     irac_filter: none
+#     apply_mask:  false
+# -----------------------------------------------------------------------------
+samples:
+
+  # ── Euclid Deep Field South (EDF-S / bottom patch) ─────────────────────────
+
+  edf_s_irac_footprint:
+    description: "EDF-S · IRAC footprint · Euclid mask applied"
+    field:       edf_s
+    irac_filter: footprint
+    apply_mask:  true
+
+  edf_s_irac_detected:
+    description: "EDF-S · IRAC detected · Euclid mask applied"
+    field:       edf_s
+    irac_filter: detected
+    apply_mask:  true
+
+  edf_s_all:
+    description: "EDF-S · all LRDs (no IRAC filter) · Euclid mask applied"
+    field:       edf_s
+    irac_filter: none
+    apply_mask:  true
+
+  edf_s_no_footprint:
+    description: "EDF-S · outside IRAC footprint · Euclid mask applied"
+    field:       edf_s
+    irac_filter: no_footprint
+    apply_mask:  true
+
+  edf_s_irac_footprint_unmasked:
+    description: "EDF-S · IRAC footprint · no Euclid mask"
+    field:       edf_s
+    irac_filter: footprint
+    apply_mask:  false
+
+  edf_s_irac_detected_unmasked:
+    description: "EDF-S · IRAC detected · no Euclid mask"
+    field:       edf_s
+    irac_filter: detected
+    apply_mask:  false
+
+  # ── Euclid Deep Field Fornax (EDF-F / mid patch) ────────────────────────────
+
+  edf_fornax_all:
+    description: "EDF-Fornax · all LRDs"
+    field:       edf_fornax
+    irac_filter: none
+    apply_mask:  false
+
+  edf_fornax_irac_footprint:
+    description: "EDF-Fornax · IRAC footprint"
+    field:       edf_fornax
+    irac_filter: footprint
+    apply_mask:  false
+
+  edf_fornax_irac_detected:
+    description: "EDF-Fornax · IRAC detected"
+    field:       edf_fornax
+    irac_filter: detected
+    apply_mask:  false
+
+  # ── Euclid Deep Field North (EDF-N / north patch) ───────────────────────────
+
+  edf_n_all:
+    description: "EDF-N · all LRDs"
+    field:       edf_n
+    irac_filter: none
+    apply_mask:  false
+
+  edf_n_irac_footprint:
+    description: "EDF-N · IRAC footprint"
+    field:       edf_n
+    irac_filter: footprint
+    apply_mask:  false
+
+  edf_n_irac_detected:
+    description: "EDF-N · IRAC detected"
+    field:       edf_n
+    irac_filter: detected
+    apply_mask:  false
+
+  # ── All fields combined ──────────────────────────────────────────────────────
+  # EDF-S mask is applied where available; EDF-F and EDF-N use uniform randoms.
+
+  all_irac_footprint:
+    description: "All EDF fields · IRAC footprint · EDF-S masked"
+    field:       all
+    irac_filter: footprint
+    apply_mask:  true
+
+  all_irac_detected:
+    description: "All EDF fields · IRAC detected · EDF-S masked"
+    field:       all
+    irac_filter: detected
+    apply_mask:  true
+
+  all_lrds:
+    description: "All EDF fields · all LRDs · EDF-S masked"
+    field:       all
+    irac_filter: none
+    apply_mask:  true
+
+
+# -----------------------------------------------------------------------------
+# Angular bin configuration
+# USER-CONFIGURABLE — change these to explore different angular scales.
+#
+# Note on max_sep per field:
+#   EDF-S      : L_min ≈ 6.5° → strict: 2.2°, conservative: 3.3° (current)
+#   EDF-Fornax : L_min ≈ 4.0° → strict: 1.3°, conservative: 2.0°
+#   EDF-N      : L_min ≈ 5.5° → strict: 1.8°, conservative: 2.8°
+# For multi-field runs, set max_sep to the most conservative limit (1.3°)
+# or use EDF-S limits for single-field runs (3.3°).
+# -----------------------------------------------------------------------------
+bins:
+  # Minimum angular separation (degrees).
+  # The minimum observed galaxy pair separation in EDF-S is ~0.0022°.
+  # Using 0.009° gives a ~4× safety margin with adequate pair statistics.
+  min_sep:   0.009   # degrees  ≈ 0.54 arcmin
+
+  # Maximum angular separation (degrees).
+  # Strict Landy & Szalay (1993) limit for EDF-S: L_min/3 = 6.5°/3 ≈ 2.2°
+  # We use 3.3° (≈ L_min/2) for a wider dynamic range.
+  # For EDF-Fornax / EDF-N, consider reducing to 1.3° or 2.0°.
+  max_sep:   3.3     # degrees  ≈ 198 arcmin
+
+  # Number of logarithmically-spaced bins.
+  # 15 bins across a 367× dynamic range (3.3/0.009) → ~0.17 dex per bin.
+  nbins:     15
+
+  # Unit of min_sep / max_sep passed to TreeCorr.
+  sep_units: deg
+
+  # TreeCorr bin_slop: fractional tolerance on bin boundaries.
+  # 0.01 = 1% — balances speed and accuracy.
+  bin_slop:  0.01
+
+
+# -----------------------------------------------------------------------------
+# Random catalog settings
+# USER-CONFIGURABLE
+# -----------------------------------------------------------------------------
+randoms:
+  # N_randoms = n_randoms_factor × N_galaxies_in_sample.
+  # Higher factor → lower shot noise in pair counts, but longer runtime.
+  # The thesis final analysis used factor = 100.
+  n_randoms_factor: 100
+
+  # Random seed (integer for reproducibility, null for a different seed each run).
+  seed: 42
+
+  # Oversampling per mask-rejection batch. A batch of
+  # batch_factor × n_randoms candidates is drawn, then filtered through
+  # the mask. Increase if the mask acceptance rate is very low.
+  batch_factor: 10
+
+
+# -----------------------------------------------------------------------------
+# Simulation-based error estimation
+# USER-CONFIGURABLE
+#
+# The simulation files are N-body sky catalogues provided by collaborators.
+# Each simulation has a clustering amplitude parameter alpha (power-law slope).
+# All files follow the column-swap convention documented below.
+#
+# IMPORTANT — Column swap bug:
+#   Despite their names, RA_sim_*.npy contains DEC values and
+#   DEC_sim_*.npy contains RA values.  This is a known quirk of the
+#   collaborator's output format.  The correction is applied automatically
+#   in src/errors.py and scripts/run_simulations.py.
+#
+# To add a new simulation: add an entry to 'available' below and point
+# 'active' to its key name.
+# -----------------------------------------------------------------------------
+simulations:
+
+  # ── Active simulation ──────────────────────────────────────────────────────
+  # Set this to the key name of the simulation you want to use.
+  # Can be overridden on the CLI with:  --sim-name <key>
+  active: alpha0.5
+
+  # ── Available simulations ─────────────────────────────────────────────────
+  # Each entry must have:
+  #   ra_file  — path to the RA .npy file (relative to project root)
+  #   dec_file — path to the DEC .npy file (relative to project root)
+  #   label    — human-readable label for plots and output filenames
+  available:
+
+    # Sim4: α = 0.5  (most commonly used in the PostMeting analysis)
+    alpha0.5:
+      ra_file:  data/raw/simulations/RA_sim_alpha0.5.npy
+      dec_file: data/raw/simulations/DEC_sim_alpha0.5.npy
+      label:    "α = 0.5"
+
+    # Sim2: α = 1
+    alpha1:
+      ra_file:  data/raw/simulations/RA_sim_alpha1.npy
+      dec_file: data/raw/simulations/DEC_sim_alpha1.npy
+      label:    "α = 1"
+
+    # Sim3: α = 3
+    alpha3:
+      ra_file:  data/raw/simulations/RA_sim_alpha3.npy
+      dec_file: data/raw/simulations/DEC_sim_alpha3.npy
+      label:    "α = 3"
+
+    # Sim1: no labelled alpha (original collaborator file)
+    default:
+      ra_file:  data/raw/simulations/RA_sim_noalpha.npy
+      dec_file: data/raw/simulations/DEC_sim_noalpha.npy
+      label:    "default (α unlabelled)"
+
+  # ── Catalog generation parameters ─────────────────────────────────────────
+  # Number of synthetic catalogs to generate per run.
+  n_catalogs: 100
+
+  # Minimum galaxies required for a rotated catalog to be kept.
+  # Rotations that yield fewer galaxies inside the mask are rejected.
+  min_galaxies: 2
+
+  # Random seed for rotation offsets (null = different each run).
+  seed: 42
+
+
+# -----------------------------------------------------------------------------
+# Cosmology (used by OneCovariance for the Gaussian covariance model)
+# Planck 2018 best-fit (arXiv:1807.06209)
+# -----------------------------------------------------------------------------
+cosmology:
+  sigma8:   0.81
+  h:        0.67
+  omega_m:  0.32
+  omega_b:  0.049
+  omega_de: 0.68
+  w0:      -1.0
+  wa:       0.0
+  ns:       0.965
+  neff:     3.046
+  m_nu:     0.06    # eV
+
+
+# -----------------------------------------------------------------------------
+# Galaxy bias (for OneCovariance Gaussian covariance model)
+# USER-CONFIGURABLE — update after fitting the clustering amplitude
+# -----------------------------------------------------------------------------
+bias:
+  # Constant linear bias b(z) = value.
+  # LRDs are expected to be highly biased (b ~ 3–10 for massive hosts at z~5–7).
+  # Our 2PACF results are consistent with b >= 2 (thesis + literature).
+  # Current best estimate: b = 3.0.
+  value: 3.0
+
+
+# -----------------------------------------------------------------------------
+# Plotting
+# USER-CONFIGURABLE
+# -----------------------------------------------------------------------------
+plotting:
+  dpi:       300
+  # figformat: output format for saved figures.
+  #   pdf  — vector, publication-quality
+  #   png  — raster, quick preview
+  #   both — save both pdf and png
+  figformat: pdf
+  # matplotlib style (e.g. "seaborn-v0_8-whitegrid", "default", "bmh")
+  style:     default

@@ -1,0 +1,22 @@
+name: lrds
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.10
+  - numpy>=1.24
+  - scipy>=1.10
+  - matplotlib>=3.7
+  - astropy>=5.3
+  - healpy>=1.16
+  - healsparse>=1.8
+  - jupyter
+  - jupyterlab
+  - ipykernel
+  - pyyaml>=6.0
+  - pip
+  - pip:
+      - treecorr>=4.3
+      # OneCovariance must be installed separately from source:
+      # git clone https://github.com/rreischke/OneCovariance
+      # cd OneCovariance && pip install -e .

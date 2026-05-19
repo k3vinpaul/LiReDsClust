@@ -1,0 +1,52 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.ipynb_checkpoints/
+*.egg-info/
+.eggs/
+dist/
+build/
+.env
+.venv/
+env/
+
+# Jupyter
+.jupyter/
+
+# Data (large files — track only in data/raw/ intentionally)
+data/processed/*.fits
+data/processed/*.npz
+results/correlation_functions/*.npz
+results/covariance_matrices/*
+!results/correlation_functions/.gitkeep
+!results/covariance_matrices/.gitkeep
+!results/figures/.gitkeep
+!data/processed/.gitkeep
+
+# Restricted Euclid/collaborator data — not for public access.
+# These files are proprietary to the Euclid Collaboration and collaborators.
+# See DATA_ACCESS.md for how to request access.
+data/raw/LRD_MarIRAC.fits
+data/raw/masks/
+data/raw/simulations/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+
+# Generated figures (reproducible, not tracked)
+results/figures/*.pdf
+results/figures/*.png
+results/figures/*.svg
+
+# Archive (large, not meant for clean history)
+archive/
+
+# Claude Code internal files — not for public repositories
+CLAUDE.md
+.claude/
