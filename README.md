@@ -519,7 +519,7 @@ All figures are saved to `results/figures/`. Key outputs:
 
 ---
 
-## 10. Scientific methods summary
+## 10. Mathematical methods summary
 
 ### Estimator
 
